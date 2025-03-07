@@ -8,6 +8,7 @@ class VoiceChatReader:
     def __init__(self, bot, speed=1.5):  # デフォルト速度を1.5倍に設定
         self.bot = bot
         self.speed = speed  # 再生速度を設定
+        self.voice_tmp_dir = os.path.join(os.path.dirname(__file__), "voice_tmp")
 
     async def on_message(self, message):
         """ ユーザーがミュート中ならメッセージをVCで読み上げる """
@@ -36,7 +37,7 @@ class VoiceChatReader:
     async def read_text_in_vc(self, vc, text):
         """ メッセージを音声に変換してVCで再生 """
         tts = gTTS(text=text, lang="ja")
-        filename = "speech.mp3"
+        filename = os.path.join(self.voice_tmp_dir, "speech.mp3")
         tts.save(filename)
 
         # FFmpeg のフィルタを使って再生速度を変更
