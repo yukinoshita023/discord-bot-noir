@@ -33,10 +33,17 @@ class VoiceChatReader:
                             await self.read_text_in_vc(vc, text)
 
     def filter_message(self, text):
-        """ メッセージ内のURLを検出して 'URL省略' に置き換える """
+        """ メッセージ内のURLを検出して 'URL省略' に置き換え、絵文字を無視 """
+        # 絵文字を取り除くための正規表現
+        emoji_pattern = re.compile(r'<:.+?:\d+>|<a:.+?:\d+>|[\U00010000-\U0010ffff]')
+        # URLを取り除くための正規表現
         url_pattern = re.compile(r'https?://\S+|www\.\S+')
+
+        # 絵文字とURLを取り除く
+        text = emoji_pattern.sub('', text)
         if url_pattern.search(text):  # URLが含まれていたら置き換え
-            return "URL省略"
+            text = "URL省略"
+
         return text.strip()
 
     async def read_text_in_vc(self, vc, text):
