@@ -19,19 +19,31 @@ class VoiceChatReader:
         if any(attachment.content_type and attachment.content_type.startswith(("image/", "video/")) for attachment in message.attachments):
             return
 
+        # ボットがVCに接続しているか確認
         vc = discord.utils.get(self.bot.voice_clients, guild=message.guild)
-        if vc and vc.is_connected():  # ボットがVCにいるか
+        if vc and vc.is_connected():  # ボットがVCに接続している場合
             member = message.guild.get_member(message.author.id)
-            if member and member.voice and (member.voice.self_mute or member.voice.mute):  # ミュートされとるか
-                text = self.filter_message(message.content)
-                if text:  # 空のメッセージは読み上げない
-                    await self.read_text_in_vc(vc, text)
+            if member and member.voice:  # ユーザーがボイスチャンネルに参加しているか確認
+                # 同じボイスチャンネルにいるかチェック
+                if member.voice.channel == vc.channel:
+                    # ミュートされているか確認
+                    if member.voice.self_mute or member.voice.mute:
+                        text = self.filter_message(message.content)
+                        if text:  # 空のメッセージは読み上げない
+                            await self.read_text_in_vc(vc, text)
 
     def filter_message(self, text):
-        """ メッセージ内のURLを検出して 'URL省略' に置き換える """
+        """ メッセージ内のURLを検出して 'URL省略' に置き換え、絵文字を無視 """
+        # 絵文字を取り除くための正規表現
+        emoji_pattern = re.compile(r'<:.+?:\d+>|<a:.+?:\d+>|[\U00010000-\U0010ffff]')
+        # URLを取り除くための正規表現
         url_pattern = re.compile(r'https?://\S+|www\.\S+')
+
+        # 絵文字とURLを取り除く
+        text = emoji_pattern.sub('', text)
         if url_pattern.search(text):  # URLが含まれていたら置き換え
-            return "URL省略"
+            text = "URL省略"
+
         return text.strip()
 
     async def read_text_in_vc(self, vc, text):
