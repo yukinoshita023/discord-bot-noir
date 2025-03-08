@@ -19,13 +19,18 @@ class VoiceChatReader:
         if any(attachment.content_type and attachment.content_type.startswith(("image/", "video/")) for attachment in message.attachments):
             return
 
+        # ボットがVCに接続しているか確認
         vc = discord.utils.get(self.bot.voice_clients, guild=message.guild)
-        if vc and vc.is_connected():  # ボットがVCにいるか
+        if vc and vc.is_connected():  # ボットがVCに接続している場合
             member = message.guild.get_member(message.author.id)
-            if member and member.voice and (member.voice.self_mute or member.voice.mute):  # ミュートされとるか
-                text = self.filter_message(message.content)
-                if text:  # 空のメッセージは読み上げない
-                    await self.read_text_in_vc(vc, text)
+            if member and member.voice:  # ユーザーがボイスチャンネルに参加しているか確認
+                # 同じボイスチャンネルにいるかチェック
+                if member.voice.channel == vc.channel:
+                    # ミュートされているか確認
+                    if member.voice.self_mute or member.voice.mute:
+                        text = self.filter_message(message.content)
+                        if text:  # 空のメッセージは読み上げない
+                            await self.read_text_in_vc(vc, text)
 
     def filter_message(self, text):
         """ メッセージ内のURLを検出して 'URL省略' に置き換える """
