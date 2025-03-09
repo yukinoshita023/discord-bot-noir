@@ -4,11 +4,12 @@ from discord.ext import tasks
 from discord import FFmpegPCMAudio
 from datetime import datetime, timedelta
 import pytz
+from config import VOICE_CHANNEL_ID
 
 class TimeSignal:
     def __init__(self, bot):
         self.bot = bot
-        self.channel_id = 905329383630340117  # 音声を流すチャンネルIDをここに設定
+        self.channel_id = VOICE_CHANNEL_ID  # 音声を流すチャンネルIDをここに設定
         self.audio_path = "audio/"  # 音声ファイルのパスのプレフィックス
         self.next_signal_time = None
         self.calculate_next_signal_time()  # 初回の時刻を計算して設定
