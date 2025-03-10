@@ -2,9 +2,11 @@ import discord
 from config import TOKEN
 from config import MEIBO_CHANNEL_ID
 from commands import setup_commands
+import asyncio
 from voice_chat_reader import VoiceChatReader #文字読み上げ機能
 from time_signal import TimeSignal  # 時報機能をインポート
 from meibo_reaction import ReactionHandler  # リアクション機能をインポート
+import voice_state_announce # 入退出読み上げ機能
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -28,6 +30,8 @@ class MyBot(discord.Client):
         self.time_signal = TimeSignal(self)
 
 bot = MyBot()
+
+voice_state_announce.setup(bot) #入退出読み上げ機能をセットアップ
 
 @bot.event
 async def on_ready():
