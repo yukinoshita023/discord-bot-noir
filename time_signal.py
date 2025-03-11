@@ -29,6 +29,23 @@ class TimeSignal:
         self.next_signal_time_seconds = (self.next_signal_time - now).total_seconds()
         print(f"次の時報までの待機時間: {self.next_signal_time_seconds}秒")
 
+    async def play_audio_sequence(self, voice_client, files):
+        """リストの音声ファイルを順番に再生"""
+        if not files:
+            return
+        
+        def after_play(error):
+            if error:
+                print(f"エラー発生: {error}")
+            elif files:
+                next_file = files.pop(0)
+                print(f"再生中: {next_file}")
+                voice_client.play(FFmpegPCMAudio(next_file), after=after_play)
+
+        first_file = files.pop(0)
+        print(f"再生中: {first_file}")
+        voice_client.play(FFmpegPCMAudio(first_file), after=after_play)
+
     @tasks.loop(hours=1)  # 1時間ごとに処理を実行
     async def play_signal(self):
         """時報音声を再生する処理"""
@@ -36,6 +53,8 @@ class TimeSignal:
             # 日本標準時 (JST) を取得
             jst = pytz.timezone('Asia/Tokyo')
             now = datetime.now(jst)
+
+            jiho_audio_file = "audio/時報2倍速.mp3"
 
             audio_file = f"{self.audio_path}{now.hour}時です.wav"
 
@@ -52,8 +71,7 @@ class TimeSignal:
                     return
 
                 # 音声再生
-                voice_client.play(FFmpegPCMAudio(audio_file), after=lambda e: print(f"音声再生終了: {audio_file}"))
-                print(f"{now.hour}時です.wav を再生中...")
+                await self.play_audio_sequence(voice_client, [jiho_audio_file, audio_file])
 
             # 次の時報までの待機時間を再計算
             self.calculate_next_signal_time()
