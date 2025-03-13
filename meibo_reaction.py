@@ -9,6 +9,6 @@ class ReactionHandler:
             await message.add_reaction("👍")
             await message.add_reaction("❤️")
             await message.add_reaction("🚀")
-            print("リアクションを追加しました。")
+            print("リアクションを追加しました")
         except Exception as e:
             print(f"リアクションの追加に失敗しました: {e}")

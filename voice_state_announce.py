@@ -9,7 +9,6 @@ if not os.path.exists(VOICE_TMP_DIR):
     os.makedirs(VOICE_TMP_DIR)
 
 async def play_tts(vc, text, speed=1.5):
-    """gTTS で音声を生成して再生する"""
     tts = gTTS(text=text, lang="ja")
     filename = os.path.join(VOICE_TMP_DIR, "vc_announce.mp3")
     tts.save(filename)
