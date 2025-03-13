@@ -14,7 +14,7 @@ class TimeSignal:
         self.audio_path = "audio/"
         self.next_signal_time = None
         self.calculate_next_signal_time() # 最初の時報までの時間を計算
-        self.play_signal.start() # 時報ループを開始
+        self.play_signal.start()
 
     def calculate_next_signal_time(self):
         """次の時報の時刻を計算"""

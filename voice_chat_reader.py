@@ -11,7 +11,6 @@ class VoiceChatReader:
         self.voice_tmp_dir = os.path.join(os.path.dirname(__file__), "voice_tmp")
 
     async def on_message(self, message):
-        """ ユーザーがミュート中ならメッセージをVCで読み上げる """
         if message.author.bot:
             return
 
@@ -39,7 +38,6 @@ class VoiceChatReader:
         return text.strip()
 
     async def read_text_in_vc(self, vc, text):
-        """ メッセージを音声に変換してVCで再生 """
         tts = gTTS(text=text, lang="ja")
         filename = os.path.join(self.voice_tmp_dir, "speech.mp3")
         tts.save(filename)

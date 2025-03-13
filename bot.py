@@ -4,7 +4,7 @@ from config import MEIBO_CHANNEL_ID
 from commands import setup_commands
 from voice_chat_reader import VoiceChatReader # テキスト読み上げ機能
 from time_signal import TimeSignal  # 時報機能
-from meibo_reaction import ReactionHandler  # めいぼリアクション機能
+from meibo_reaction import ReactionHandler  # 名簿リアクション機能
 import voice_state_announce # 入退出読み上げ機能
 
 intents = discord.Intents.default()
