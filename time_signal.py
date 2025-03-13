@@ -42,9 +42,9 @@ class TimeSignal:
                 print(f"再生中: {next_file}")
                 voice_client.play(FFmpegPCMAudio(next_file), after=after_play)
 
-            first_file = files.pop(0)
-            print(f"再生中: {first_file}")
-            voice_client.play(FFmpegPCMAudio(first_file), after=after_play)
+        first_file = files.pop(0)
+        print(f"再生中: {first_file}")
+        voice_client.play(FFmpegPCMAudio(first_file), after=after_play)
 
     @tasks.loop(hours=1)  # 1時間ごとに処理を実行
     async def play_signal(self):
