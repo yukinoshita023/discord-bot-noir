@@ -54,7 +54,7 @@ class TimeSignal:
             jst = pytz.timezone('Asia/Tokyo')
             now = datetime.now(jst)
 
-            jiho_audio_file = "audio/時報2倍速.mp3"
+            jiho_audio_file = "audio/時報2倍速.wav"
 
             audio_file = f"{self.audio_path}{now.hour}時です.wav"
 
