@@ -13,8 +13,8 @@ class TimeSignal:
         self.channel_id = VOICE_CHANNEL_ID
         self.audio_path = "audio/"
         self.next_signal_time = None
-        self.calculate_next_signal_time()  # 最初の時報までの時間を計算
-        self.play_signal.start()  # 時報ループを開始
+        self.calculate_next_signal_time() # 最初の時報までの時間を計算
+        self.play_signal.start() # 時報ループを開始
 
     def calculate_next_signal_time(self):
         """次の時報の時刻を計算"""
@@ -46,11 +46,9 @@ class TimeSignal:
         print(f"再生中: {first_file}")
         voice_client.play(FFmpegPCMAudio(first_file), after=after_play)
 
-    @tasks.loop(hours=1)  # 1時間ごとに処理を実行
+    @tasks.loop(hours=1)
     async def play_signal(self):
-        """時報音声を再生する処理"""
         try:
-            # 日本標準時 (JST) を取得
             jst = pytz.timezone('Asia/Tokyo')
             now = datetime.now(jst)
 
@@ -62,7 +60,6 @@ class TimeSignal:
                 print(f"エラー: 音声ファイル {audio_file} が存在しません。")
                 return
 
-            # ボイスチャンネルを取得
             channel = self.bot.get_channel(self.channel_id)
             if channel and isinstance(channel, discord.VoiceChannel):
                 voice_client = channel.guild.voice_client
@@ -70,10 +67,8 @@ class TimeSignal:
                     print("ボットは通話中ではありません。")
                     return
 
-                # 音声再生
                 await self.play_audio_sequence(voice_client, [jiho_audio_file, audio_file])
 
-            # 次の時報までの待機時間を再計算
             self.calculate_next_signal_time()
         except Exception as e:
             print(f"エラーが発生しました: {e}")
@@ -81,4 +76,4 @@ class TimeSignal:
     @play_signal.before_loop
     async def before_play_signal(self):
         """最初に待機時間を設定"""
-        await asyncio.sleep(self.next_signal_time_seconds)  # 最初の時報まで待機
+        await asyncio.sleep(self.next_signal_time_seconds)
