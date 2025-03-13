@@ -2,10 +2,9 @@ import discord
 from config import TOKEN
 from config import MEIBO_CHANNEL_ID
 from commands import setup_commands
-import asyncio
-from voice_chat_reader import VoiceChatReader #文字読み上げ機能
-from time_signal import TimeSignal  # 時報機能をインポート
-from meibo_reaction import ReactionHandler  # リアクション機能をインポート
+from voice_chat_reader import VoiceChatReader # テキスト読み上げ機能
+from time_signal import TimeSignal  # 時報機能
+from meibo_reaction import ReactionHandler  # めいぼリアクション機能
 import voice_state_announce # 入退出読み上げ機能
 
 intents = discord.Intents.default()
@@ -16,9 +15,9 @@ class MyBot(discord.Client):
     def __init__(self):
         super().__init__(intents=intents)
         self.tree = discord.app_commands.CommandTree(self)
-        self.voice_chat_reader = VoiceChatReader(self,speed=2.0) # VC速度はここで変える
-        self.time_signal = None  # 時報機能を格納する変数
-        self.reaction_handler = ReactionHandler(self)  # リアクションハンドラーのインスタンス
+        self.voice_chat_reader = VoiceChatReader(self,speed=2.0)
+        self.time_signal = None
+        self.reaction_handler = ReactionHandler(self)
 
     async def setup_hook(self):
         await setup_commands(self)
@@ -31,7 +30,7 @@ class MyBot(discord.Client):
 
 bot = MyBot()
 
-voice_state_announce.setup(bot) #入退出読み上げ機能をセットアップ
+voice_state_announce.setup(bot)
 
 @bot.event
 async def on_ready():
@@ -41,7 +40,6 @@ async def on_ready():
 async def on_message(message):
     await bot.voice_chat_reader.on_message(message)
 
-    # メッセージが指定されたチャンネルからのものであればリアクションを追加
     if message.channel.id == MEIBO_CHANNEL_ID:
         await bot.reaction_handler.add_reactions(message)
 
