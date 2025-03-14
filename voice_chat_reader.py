@@ -28,7 +28,6 @@ class VoiceChatReader:
                             await self.read_text_in_vc(vc, text)
 
     def is_same_category(self, voice_channel, text_channel):
-        """ボイスチャンネルとテキストチャンネルが同じカテゴリに属しているか判定"""
         return (voice_channel.category and text_channel.category and voice_channel.category.id == text_channel.category.id)
 
     def filter_message(self, text):
