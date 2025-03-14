@@ -20,12 +20,15 @@ class VoiceChatReader:
         vc = discord.utils.get(self.bot.voice_clients, guild=message.guild)
         if vc and vc.is_connected():
             member = message.guild.get_member(message.author.id)
-            if member and member.voice:
-                if member.voice.channel == vc.channel:
-                    if member.voice.self_mute or member.voice.mute:
+            if member and member.voice and member.voice.channel == vc.channel:
+                if member.voice.self_mute or member.voice.mute:
+                    if self.is_same_category(member.voice.channel, message.channel):
                         text = self.filter_message(message.content)
                         if text:
                             await self.read_text_in_vc(vc, text)
+
+    def is_same_category(self, voice_channel, text_channel):
+        return (voice_channel.category and text_channel.category and voice_channel.category.id == text_channel.category.id)
 
     def filter_message(self, text):
         emoji_pattern = re.compile(r'<:.+?:\d+>|<a:.+?:\d+>|[\U00010000-\U0010ffff]')
