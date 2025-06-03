@@ -2,13 +2,13 @@ import discord
 import asyncio
 import os
 import re
-from gtts import gTTS
+from audio_queue import TTSPlayer
 
 class VoiceChatReader:
-    def __init__(self, bot, speed=1.5):
+    def __init__(self, bot, tts_player: TTSPlayer, speed=1.5):
         self.bot = bot
+        self.tts_player = tts_player
         self.speed = speed
-        self.voice_tmp_dir = os.path.join(os.path.dirname(__file__), "voice_tmp")
 
     async def on_message(self, message):
         if message.author.bot:
@@ -18,14 +18,22 @@ class VoiceChatReader:
             return
 
         vc = discord.utils.get(self.bot.voice_clients, guild=message.guild)
-        if vc and vc.is_connected():
-            member = message.guild.get_member(message.author.id)
-            if member and member.voice and member.voice.channel == vc.channel:
-                if member.voice.self_mute or member.voice.mute:
-                    if self.is_same_category(member.voice.channel, message.channel):
-                        text = self.filter_message(message.content)
-                        if text:
-                            await self.read_text_in_vc(vc, text)
+        if not vc or not vc.is_connected():
+            return
+
+        member = message.guild.get_member(message.author.id)
+        if not member or not member.voice or member.voice.channel != vc.channel:
+            return
+
+        if not (member.voice.self_mute or member.voice.mute):
+            return
+
+        if not self.is_same_category(member.voice.channel, message.channel):
+            return
+
+        text = self.filter_message(message.content)
+        if text:
+            await self.tts_player.enqueue_tts(f"{member.display_name} さん、{text}", speed=self.speed)
 
     def is_same_category(self, voice_channel, text_channel):
         return (voice_channel.category and text_channel.category and voice_channel.category.id == text_channel.category.id)
@@ -39,14 +47,3 @@ class VoiceChatReader:
             text = "URL省略"
 
         return text.strip()
-
-    async def read_text_in_vc(self, vc, text):
-        tts = gTTS(text=text, lang="ja")
-        filename = os.path.join(self.voice_tmp_dir, "speech.mp3")
-        tts.save(filename)
-
-        ffmpeg_options = f'-filter:a "atempo={self.speed}"'
-
-        vc.play(discord.FFmpegPCMAudio(filename, options=ffmpeg_options), after=lambda e: os.remove(filename))
-        while vc.is_playing():
-            await asyncio.sleep(1)
