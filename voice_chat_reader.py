@@ -10,11 +10,19 @@ class VoiceChatReader:
         self.speed = speed
         self.voice_tmp_dir = os.path.join(os.path.dirname(__file__), "voice_tmp")
 
+        # フォルダがなければ作成
+        if not os.path.exists(self.voice_tmp_dir):
+            os.makedirs(self.voice_tmp_dir)
+
     async def on_message(self, message):
         if message.author.bot:
             return
 
-        if any(attachment.content_type and attachment.content_type.startswith(("image/", "video/")) for attachment in message.attachments):
+        # 画像・動画などは読み上げ対象外
+        if any(
+            attachment.content_type and attachment.content_type.startswith(("image/", "video/"))
+            for attachment in message.attachments
+        ):
             return
 
         vc = discord.utils.get(self.bot.voice_clients, guild=message.guild)
@@ -28,7 +36,11 @@ class VoiceChatReader:
                             await self.read_text_in_vc(vc, text)
 
     def is_same_category(self, voice_channel, text_channel):
-        return (voice_channel.category and text_channel.category and voice_channel.category.id == text_channel.category.id)
+        return (
+            voice_channel.category
+            and text_channel.category
+            and voice_channel.category.id == text_channel.category.id
+        )
 
     def filter_message(self, text):
         emoji_pattern = re.compile(r'<:.+?:\d+>|<a:.+?:\d+>|[\U00010000-\U0010ffff]')
@@ -45,8 +57,10 @@ class VoiceChatReader:
         filename = os.path.join(self.voice_tmp_dir, "speech.mp3")
         tts.save(filename)
 
-        ffmpeg_options = f'-filter:a "atempo={self.speed}"'
+        ffmpeg_options = f'-filter:a \"atempo={self.speed}\"'
+        source = discord.FFmpegPCMAudio(filename, options=ffmpeg_options)
 
-        vc.play(discord.FFmpegPCMAudio(filename, options=ffmpeg_options), after=lambda e: os.remove(filename))
-        while vc.is_playing():
-            await asyncio.sleep(1)
+        def after_playing(error):
+            os.remove(filename)
+
+        await self.bot.audio_queue.enqueue(vc, source)
