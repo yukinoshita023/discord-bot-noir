@@ -16,7 +16,7 @@ async def play_tts(bot, vc, text, speed=1.5):
 
     temp_filename = os.path.join(VOICE_TMP_DIR, "vc_announce_temp.mp3")
     subprocess.run([
-        'ffmpeg', '-i', filename, '-filter:a', f'atempo={speed}', temp_filename, '-loglevel', 'quiet',
+        'ffmpeg', '-y', '-i', filename, '-filter:a', f'atempo={speed}', temp_filename, '-loglevel', 'quiet',
     ])
 
     source = discord.FFmpegPCMAudio(temp_filename)
