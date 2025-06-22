@@ -1,12 +1,12 @@
 import discord
-from config import TOKEN
-from config import MEIBO_CHANNEL_ID
+from config import TOKEN, MEIBO_CHANNEL_ID, VOICE_CHANNEL_ID
 from commands import setup_commands
-from voice_chat_reader import VoiceChatReader # テキスト読み上げ機能
-from time_signal import TimeSignal  # 時報機能
-from meibo_reaction import ReactionHandler  # 名簿リアクション機能
-import voice_state_announce # 入退出読み上げ機能
-from audio_queue import AudioQueue #キュー機能
+from voice_chat_reader import VoiceChatReader
+from time_signal import TimeSignal
+from meibo_reaction import ReactionHandler
+import voice_state_announce
+from audio_queue import AudioQueue
+from vc_reconnect import join_voice_channel_if_needed
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -17,26 +17,30 @@ class MyBot(discord.Client):
         super().__init__(intents=intents)
         self.tree = discord.app_commands.CommandTree(self)
         self.audio_queue = AudioQueue()
-        self.voice_chat_reader = VoiceChatReader(self,speed=2.0)
+        self.voice_chat_reader = VoiceChatReader(self, speed=2.0)
         self.time_signal = None
         self.reaction_handler = ReactionHandler(self)
 
     async def setup_hook(self):
         await setup_commands(self)
         print("全コマンドを追加しました")
-
         await self.tree.sync()
         print("スラッシュコマンドを同期しました")
-
         self.time_signal = TimeSignal(self)
 
 bot = MyBot()
-
 voice_state_announce.setup(bot)
 
 @bot.event
 async def on_ready():
     print(f"ログインしました: {bot.user}")
+    await join_voice_channel_if_needed(bot)
+
+@bot.event
+async def on_voice_state_update(member, before, after):
+    if member.id == bot.user.id and before.channel is not None and after.channel is None:
+        print("Botが通話から落ちました、再接続します")
+        await join_voice_channel_if_needed(bot)
 
 @bot.event
 async def on_message(message):
