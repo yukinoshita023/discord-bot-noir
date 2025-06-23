@@ -4,7 +4,7 @@ from commands import setup_commands
 from voice_chat_reader import VoiceChatReader
 from time_signal import TimeSignal
 from meibo_reaction import ReactionHandler
-import voice_state_announce
+from voice_state_announce import play_tts
 from audio_queue import AudioQueue
 from vc_reconnect import join_voice_channel_if_needed
 
@@ -29,7 +29,6 @@ class MyBot(discord.Client):
         self.time_signal = TimeSignal(self)
 
 bot = MyBot()
-voice_state_announce.setup(bot)
 
 @bot.event
 async def on_ready():
@@ -38,9 +37,22 @@ async def on_ready():
 
 @bot.event
 async def on_voice_state_update(member, before, after):
-    if member.id == bot.user.id and before.channel is not None and after.channel is None:
+    if member.id == bot.user.id and before.channel and after.channel is None:
         print("Botが通話から落ちました、再接続します")
         await join_voice_channel_if_needed(bot)
+        return
+
+    if before.channel != after.channel and member.id != bot.user.id:
+        display_name = member.display_name
+        vc = discord.utils.get(bot.voice_clients, guild=member.guild)
+
+        if after.channel and bot.user in after.channel.members:
+            if vc and vc.is_connected():
+                await play_tts(bot, vc, f"{display_name} さんが参加しました", speed=2.0)
+
+        elif before.channel and bot.user in before.channel.members:
+            if vc and vc.is_connected():
+                await play_tts(bot, vc, f"{display_name} さんが退出しました", speed=2.0)
 
 @bot.event
 async def on_message(message):
