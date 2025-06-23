@@ -30,20 +30,3 @@ async def play_tts(bot, vc, text, speed=1.5):
 
     await bot.audio_queue.enqueue(vc, source)
     asyncio.create_task(cleanup())
-
-def setup(bot):
-    @bot.event
-    async def on_voice_state_update(member, before, after):
-        if before.channel != after.channel:
-            display_name = member.display_name
-
-            vc = None
-            if after.channel and bot.user in after.channel.members:
-                vc = discord.utils.get(bot.voice_clients, guild=member.guild)
-                if vc and vc.is_connected():
-                    await play_tts(bot, vc, f"{display_name} さんが参加しました", speed=2.0)
-
-            elif before.channel and bot.user in before.channel.members:
-                vc = discord.utils.get(bot.voice_clients, guild=member.guild)
-                if vc and vc.is_connected():
-                    await play_tts(bot, vc, f"{display_name} さんが退出しました", speed=2.0)
