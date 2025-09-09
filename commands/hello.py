@@ -4,7 +4,6 @@ from config import ADMIN_ROLE_ID
 def has_role(role_id):
     async def predicate(interaction: discord.Interaction):
         member = interaction.user
-        # ユーザーが指定したロールを持っているかチェック
         role = discord.utils.get(member.roles, id=role_id)
         if role:
             return True
