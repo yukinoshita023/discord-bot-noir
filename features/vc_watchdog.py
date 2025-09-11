@@ -6,10 +6,12 @@ class VCWatchdog(commands.Cog):
     def __init__(self, bot: discord.Client):
         self.bot = bot
 
+    # Bot起動時にVC入る
     @commands.Cog.listener()
     async def on_ready(self):
         await self.bot.voice.join_if_needed(VOICE_CHANNEL_ID)
 
+    # BotがVCから落ちたら再接続する
     @commands.Cog.listener()
     async def on_voice_state_update(self, member, before, after):
         if member.id == self.bot.user.id and before.channel and after.channel is None:

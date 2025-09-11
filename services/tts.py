@@ -62,3 +62,20 @@ async def play_tts(bot, vc: discord.VoiceClient, text: str, speed: float = 2.0):
         await play_file(vc, path)
 
     await bot.audio_queue.enqueue(job())
+
+async def play_wav(bot, vc: discord.VoiceClient, path: str):
+    """
+    既存のwav/mp3ファイルを削除せずに再生する。
+    """
+    async def job():
+        def after_play(err):
+            if err:
+                print("play error:", err)
+
+        audio = discord.FFmpegPCMAudio(path)
+        vc.play(audio, after=after_play)
+
+        while vc.is_playing() or vc.is_paused():
+            await asyncio.sleep(0.1)
+
+    await bot.audio_queue.enqueue(job())
