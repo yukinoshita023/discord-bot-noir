@@ -2,6 +2,7 @@ import re
 import discord
 from discord.ext import commands
 from services.tts import play_tts
+from config import VOICE_CHANNEL_ID
 
 # --- フィルタ系ユーティリティ ---
 
@@ -32,10 +33,18 @@ def cleaned_text_for_tts(raw: str, limit: int = 200) -> str:
     return text
 
 
+def is_in_target_voice_text_chat(message: discord.Message, target_vc_id: int) -> bool:
+    ch = message.channel
+    if isinstance(ch, discord.VoiceChannel):
+        return ch.id == target_vc_id
+    return False
+
 class VoiceChatReader(commands.Cog):
-    def __init__(self, bot: discord.Client, speed: float = 2.0):
+    # 対象VCのIDを外から渡せるようにする（デフォルトで今回のIDをセット）
+    def __init__(self, bot: discord.Client, speed: float = 2.0, target_vc_id: int = 847514073964740679):
         self.bot = bot
         self.speed = speed
+        self.target_vc_id = target_vc_id
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
@@ -43,27 +52,23 @@ class VoiceChatReader(commands.Cog):
         if message.author.bot:
             return
 
+        # --- まず「そのVCのテキストチャット」限定のフィルタ ---
+        if not is_in_target_voice_text_chat(message, self.target_vc_id):
+            return
+
         # 画像/動画添付があればスキップ
         if any(is_image_or_video_attachment(att) for att in message.attachments):
             return
 
-        # BotがこのギルドでVCに接続しているか
+        # Botと同じVCにメッセージ送信者が接続しているか
         vc = discord.utils.get(self.bot.voice_clients, guild=message.guild)
-        if not (vc and vc.is_connected()):
-            return
-
-        # 投稿者がVCに居るか
         member: discord.Member = message.author
-        if not member.voice or not member.voice.channel:
+        if not vc or not member.voice or member.voice.channel.id != vc.channel.id:
             return
-
-        # Botと同じVCか
-        if vc.channel.id != member.voice.channel.id:
-            return
-
-        # ミュート中か（自分ミュート or サーバーミュート）
+        
+        # ミュート中か
         vs = member.voice
-        if not (vs.self_mute or vs.mute):
+        if not vs.self_mute:
             return
 
         # テキスト整形（URLだけ除去）
@@ -71,9 +76,7 @@ class VoiceChatReader(commands.Cog):
         if not text:
             return  # 空なら読まない
 
-        # 読み上げ
         await play_tts(self.bot, vc, text, speed=self.speed)
 
-
 async def setup(bot):
-    await bot.add_cog(VoiceChatReader(bot))
+    await bot.add_cog(VoiceChatReader(bot, VOICE_CHANNEL_ID))
