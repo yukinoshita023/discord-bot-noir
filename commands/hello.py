@@ -1,5 +1,4 @@
 import discord
-from config import ADMIN_ROLE_ID
 
 async def setup(bot):
     
