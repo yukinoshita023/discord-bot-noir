@@ -56,4 +56,4 @@ class VoiceChatReader(commands.Cog):
         await play_tts(self.bot, vc, text, speed=self.speed)
 
 async def setup(bot):
-    await bot.add_cog(VoiceChatReader(bot, VOICE_CHANNEL_ID))
+    await bot.add_cog(VoiceChatReader(bot, speed=1.7))
