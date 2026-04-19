@@ -5,12 +5,17 @@ from services.tts import play_tts
 from config import VOICE_CHANNEL_ID
 
 URL_RE = re.compile(r'https?://\S+|www\.\S+')
+EMOJI_RE = re.compile(r'<a?:[a-zA-Z0-9_]+:\d+>')
 
 def replace_urls(text: str) -> str:
     return URL_RE.sub(" URL省略 ", text)
 
+def remove_emojis(text: str) -> str:
+    return EMOJI_RE.sub("", text)
+
 def cleaned_text_for_tts(raw: str, limit: int = 50) -> str:
     text = replace_urls(raw)
+    text = remove_emojis(text)
     text = " ".join(text.split())
     if len(text) > limit:
         text = text[:limit] + "以下略"
