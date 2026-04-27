@@ -23,6 +23,7 @@ class MyBot(commands.Bot):
         await self.load_extension("features.time_signal")
         await self.load_extension("features.meibo_reaction")
         await self.load_extension("features.vc_watchdog")
+        await self.load_extension("features.reaction_role")
 
         await self.tree.sync()
 
