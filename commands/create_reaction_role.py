@@ -1,5 +1,6 @@
 import discord
 from discord import app_commands
+from typing import Optional
 import json
 import os
 
@@ -19,27 +20,40 @@ def save_data(data: dict):
 async def setup(bot):
     @bot.tree.command(name="create_reaction_role", description="リアクションでロールを付与するメッセージを作成します")
     @app_commands.describe(
-        text="送信するメッセージのテキスト",
+        text="送信するメッセージのテキスト（改行は\\nで入力）",
         role="リアクションで付与するロール",
-        emoji="リアクションに使う絵文字"
+        emoji="リアクションに使う絵文字",
+        role2="付与するロール2（任意）",
+        role3="付与するロール3（任意）"
     )
     @app_commands.default_permissions(manage_roles=True)
-    async def create_reaction_role(interaction: discord.Interaction, text: str, role: discord.Role, emoji: str):
+    async def create_reaction_role(
+        interaction: discord.Interaction,
+        text: str,
+        role: discord.Role,
+        emoji: str,
+        role2: Optional[discord.Role] = None,
+        role3: Optional[discord.Role] = None,
+    ):
         await interaction.response.defer(ephemeral=True)
 
+        roles = [r for r in [role, role2, role3] if r is not None]
+        formatted_text = text.replace("\\n", "\n")
+
         try:
-            msg = await interaction.channel.send(text)
+            msg = await interaction.channel.send(formatted_text)
             await msg.add_reaction(emoji)
         except discord.HTTPException:
             await interaction.followup.send("絵文字が無効です。Unicode絵文字を使用してください。", ephemeral=True)
             return
 
         data = load_data()
-        data[str(msg.id)] = {"emoji": emoji, "role_id": role.id, "guild_id": interaction.guild_id}
+        data[str(msg.id)] = {"emoji": emoji, "role_ids": [r.id for r in roles], "guild_id": interaction.guild_id}
         save_data(data)
 
+        role_mentions = " ".join(r.mention for r in roles)
         await interaction.followup.send(
             f"リアクションロールを作成しました！\n"
-            f"絵文字: {emoji} → ロール: {role.mention}",
+            f"絵文字: {emoji} → ロール: {role_mentions}",
             ephemeral=True
         )

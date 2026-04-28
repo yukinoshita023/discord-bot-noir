@@ -38,8 +38,11 @@ class ReactionRole(commands.Cog):
         guild = self.bot.get_guild(payload.guild_id)
         if not guild:
             return
-        role = guild.get_role(entry["role_id"])
-        if not role:
+
+        # 旧形式(role_id)と新形式(role_ids)の両方に対応
+        role_ids = entry.get("role_ids") or [entry["role_id"]]
+        roles = [r for rid in role_ids if (r := guild.get_role(rid))]
+        if not roles:
             return
 
         try:
@@ -47,9 +50,9 @@ class ReactionRole(commands.Cog):
             if not member:
                 return
             if add:
-                await member.add_roles(role)
+                await member.add_roles(*roles)
             else:
-                await member.remove_roles(role)
+                await member.remove_roles(*roles)
         except (discord.Forbidden, discord.HTTPException):
             pass
 
