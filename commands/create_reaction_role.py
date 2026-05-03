@@ -1,6 +1,5 @@
 import discord
 from discord import app_commands
-from typing import Optional
 import json
 import os
 
@@ -23,8 +22,6 @@ async def setup(bot):
         text="送信するメッセージのテキスト（改行は\\nで入力）",
         role="リアクションで付与するロール",
         emoji="リアクションに使う絵文字",
-        role2="付与するロール2（任意）",
-        role3="付与するロール3（任意）"
     )
     @app_commands.default_permissions(manage_roles=True)
     async def create_reaction_role(
@@ -32,12 +29,9 @@ async def setup(bot):
         text: str,
         role: discord.Role,
         emoji: str,
-        role2: Optional[discord.Role] = None,
-        role3: Optional[discord.Role] = None,
     ):
         await interaction.response.defer(ephemeral=True)
 
-        roles = [r for r in [role, role2, role3] if r is not None]
         formatted_text = text.replace("\\n", "\n")
 
         try:
@@ -48,12 +42,11 @@ async def setup(bot):
             return
 
         data = load_data()
-        data[str(msg.id)] = {"emoji": emoji, "role_ids": [r.id for r in roles], "guild_id": interaction.guild_id}
+        data[str(msg.id)] = {"emoji": emoji, "role_ids": [role.id], "guild_id": interaction.guild_id}
         save_data(data)
 
-        role_mentions = " ".join(r.mention for r in roles)
         await interaction.followup.send(
             f"リアクションロールを作成しました！\n"
-            f"絵文字: {emoji} → ロール: {role_mentions}",
+            f"絵文字: {emoji} → ロール: {role.mention}",
             ephemeral=True
         )
