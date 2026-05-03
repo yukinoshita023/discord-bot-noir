@@ -2,6 +2,7 @@ import discord
 from discord import app_commands
 import json
 import os
+from config import ADMIN_ROLE_ID
 
 DATA_FILE = "data/reaction_roles.json"
 
@@ -16,6 +17,15 @@ def save_data(data: dict):
     with open(DATA_FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
 
+def has_admin_role():
+    async def predicate(interaction: discord.Interaction) -> bool:
+        if not interaction.guild:
+            raise app_commands.CheckFailure("このコマンドはサーバー内でのみ使用できます。")
+        if not any(r.id == ADMIN_ROLE_ID for r in interaction.user.roles):
+            raise app_commands.CheckFailure("このコマンドは「管理課」ロールを持つユーザーのみ使用できます。")
+        return True
+    return app_commands.check(predicate)
+
 async def setup(bot):
     @bot.tree.command(name="create_reaction_role", description="リアクションでロールを付与するメッセージを作成します")
     @app_commands.describe(
@@ -23,7 +33,7 @@ async def setup(bot):
         role="リアクションで付与するロール",
         emoji="リアクションに使う絵文字",
     )
-    @app_commands.default_permissions(manage_roles=True)
+    @has_admin_role()
     async def create_reaction_role(
         interaction: discord.Interaction,
         text: str,
@@ -50,3 +60,8 @@ async def setup(bot):
             f"絵文字: {emoji} → ロール: {role.mention}",
             ephemeral=True
         )
+
+    @create_reaction_role.error
+    async def create_reaction_role_error(interaction: discord.Interaction, error: app_commands.AppCommandError):
+        if isinstance(error, app_commands.CheckFailure):
+            await interaction.response.send_message(str(error), ephemeral=True)
