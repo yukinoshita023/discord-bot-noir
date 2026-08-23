@@ -24,6 +24,7 @@ class MyBot(commands.Bot):
         await self.load_extension("features.meibo_reaction")
         await self.load_extension("features.vc_watchdog")
         await self.load_extension("features.reaction_role")
+        await self.load_extension("features.sleep_room")
 
         await self.tree.sync()
 
