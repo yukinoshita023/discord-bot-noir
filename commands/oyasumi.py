@@ -3,6 +3,7 @@ from discord import app_commands
 from config import SLEEP_LOG_CHANNEL_ID
 
 SLEEP_ROOM_NAME = "すやすや部屋"
+SLEEP_ROOM_STATUS = "ねてるかも？"
 
 async def setup(bot):
     @bot.tree.command(name="oyasumi", description="通話中に寝てしまった人をすやすや部屋に移動します")
@@ -38,19 +39,16 @@ async def setup(bot):
                 sleep_room = await interaction.guild.create_voice_channel(
                     SLEEP_ROOM_NAME,
                     category=category,
-                    overwrites={
-                        interaction.guild.default_role: discord.PermissionOverwrite(speak=False),
-                    },
                     reason=f"{interaction.user.display_name} が {member.display_name} を移動するため作成",
                 )
             except discord.Forbidden:
                 await interaction.response.send_message("すやすや部屋を作成する権限がありません。", ephemeral=True)
                 return
-        else:
-            try:
-                await sleep_room.set_permissions(interaction.guild.default_role, speak=False)
-            except discord.Forbidden:
-                pass
+
+        try:
+            await sleep_room.edit(status=SLEEP_ROOM_STATUS)
+        except discord.HTTPException:
+            pass
 
         try:
             await member.move_to(sleep_room, reason=f"{interaction.user.display_name} により {SLEEP_ROOM_NAME} に移動")
